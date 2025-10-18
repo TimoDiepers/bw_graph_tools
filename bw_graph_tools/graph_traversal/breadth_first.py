@@ -52,29 +52,6 @@ class BreadthFirstGraphTraversal:
         A set of activity matrix indices which we don't want the graph to
         traverse - i.e. we stop traversal when we hit these nodes, but
         still add them to the returned `nodes` dictionary.
-
-    Examples
-    --------
-    Basic usage:
-
-    >>> from bw2calc import LCA
-    >>> from bw_graph_tools import BreadthFirstGraphTraversal, GraphTraversalSettings
-    >>>
-    >>> lca = LCA({("my_db", "my_activity"): 1})
-    >>> lca.lci()
-    >>>
-    >>> settings = GraphTraversalSettings(max_calc=1000, max_depth=5)
-    >>> bfgt = BreadthFirstGraphTraversal(lca, settings)
-    >>> bfgt.traverse()
-    >>>
-    >>> print(f"Traversed {len(bfgt.nodes)} nodes")
-    >>> print(f"Found {len(bfgt.edges)} edges")
-
-    With static activities:
-
-    >>> static_indices = {activity_index_1, activity_index_2}
-    >>> bfgt = BreadthFirstGraphTraversal(lca, settings, static_activity_indices=static_indices)
-    >>> bfgt.traverse()
     """
 
     def __init__(
@@ -82,10 +59,9 @@ class BreadthFirstGraphTraversal:
         lca: LCA,
         settings: GraphTraversalSettings,
         functional_unit_unique_id: int = -1,
-        static_activity_indices=None,
+        static_activity_indices=Optional[set[int]] = set(),
     ):
-        if static_activity_indices is None:
-            static_activity_indices = set()
+
         self.lca = lca
         self.settings = settings
         self.static_activity_indices = static_activity_indices
