@@ -11,13 +11,14 @@ try:
 except ImportError:
     databases = {}
 
+from bw_graph_tools.graph_traversal.base import BaseGraphTraversal
 from bw_graph_tools.graph_traversal.graph_objects import SimplifiedNode, Edge
 from bw_graph_tools.graph_traversal.settings import GraphTraversalSettings
 from bw_graph_tools.graph_traversal.utils import Counter, get_demand_vector_for_activity
 from bw_graph_tools.matrix_tools import guess_production_exchanges
 
 
-class BreadthFirstGraphTraversal:
+class BreadthFirstGraphTraversal(BaseGraphTraversal[GraphTraversalSettings]):
     """
     Traverse a supply chain using breadth-first search, visiting all edges at each level.
 
@@ -59,17 +60,12 @@ class BreadthFirstGraphTraversal:
         lca: LCA,
         settings: GraphTraversalSettings,
         functional_unit_unique_id: int = -1,
-        static_activity_indices=Optional[set[int]] = set(),
+        static_activity_indices=None,
     ):
-
-        self.lca = lca
-        self.settings = settings
-        self.static_activity_indices = static_activity_indices
-
-        # internal properties
-        self._functional_unit_unique_id = functional_unit_unique_id
-        self._max_calc = self.settings.max_calc
-        self._calculation_count = Counter()
+        # Initialize base class
+        super().__init__(lca, settings, functional_unit_unique_id, static_activity_indices)
+        
+        # Override root node with SimplifiedNode (base class uses Node)
         self._root_node = SimplifiedNode(
             unique_id=functional_unit_unique_id,
             activity_datapackage_id=functional_unit_unique_id,
@@ -80,10 +76,15 @@ class BreadthFirstGraphTraversal:
             depth=0,
             supply_amount=1.0,
         )
+        # Update nodes dictionary with SimplifiedNode
         self._nodes: Dict[int, SimplifiedNode] = {
             self._functional_unit_unique_id: self._root_node
         }
+        # Initialize edges list (base class creates it but we need proper typing)
         self._edges: List[Edge] = []
+        # Initialize counter for tracking node creation
+        self._calculation_count = Counter()
+        # Create production exchange mapping
         self.production_exchange_mapping = {
             x: y for x, y in zip(*self.get_production_exchanges(self.lca.technosphere_mm))
         }
