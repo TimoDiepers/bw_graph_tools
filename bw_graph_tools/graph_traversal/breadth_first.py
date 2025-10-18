@@ -261,14 +261,17 @@ class BreadthFirstGraphTraversal:
 
             # Process all edges from this node
             for product_index, product_amount in zip(product_indices, product_amounts):
-                if self.exceeded_calculation_count:
-                    break
-
                 producer_index = self.production_exchange_mapping[product_index]
                 reference_product_net_production_amount = self.lca.technosphere_matrix[
                     product_index, producer_index
                 ]
                 scale = product_amount / reference_product_net_production_amount
+
+                # Check if creating a new node would exceed the calculation limit
+                # calculation_count is value + 1, so next value would be value + 1
+                # After next(), it would be value + 2
+                if self._calculation_count.value + 1 >= self._max_calc:
+                    break
 
                 producing_node = SimplifiedNode(
                     unique_id=next(self._calculation_count),
