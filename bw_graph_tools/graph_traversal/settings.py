@@ -53,3 +53,29 @@ class TaggedGraphTraversalSettings(GraphTraversalSettings):
     """
 
     tags: List[str] = Field(default_factory=list)
+
+
+class BreadthFirstSettings(BaseModel):
+    """
+    Settings for breadth-first graph traversal.
+
+    Parameters
+    ----------
+    max_calc : int | None
+        Maximum number of inventory calculations to perform
+    max_depth : int
+        Maximum depth in the supply chain traversal. Default is no maximum.
+    skip_coproducts : bool
+        Don't traverse co-production edges, i.e. production edges other
+        than the reference product
+    """
+
+    max_calc: Annotated[int, Field(strict=True, gt=0)] = 10000
+    max_depth: Optional[int] = None
+    skip_coproducts: bool = False
+
+    @model_validator(mode="after")
+    def max_depth_positive(self):
+        if self.max_depth is not None and self.max_depth <= 0:
+            raise ValueError(f"If specified, `max_depth` must be greater than zero")
+        return self
