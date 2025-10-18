@@ -59,7 +59,7 @@ class BreadthFirstGraphTraversal:
         lca: LCA,
         settings: GraphTraversalSettings,
         functional_unit_unique_id: int = -1,
-        static_activity_indices=Optional[set[int]] = set(),
+        static_activity_indices: Optional[set[int]] = set(),
     ):
 
         self.lca = lca
