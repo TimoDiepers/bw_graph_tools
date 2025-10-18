@@ -3,7 +3,7 @@ from bw2calc import LCA
 from bw2data import Database, get_node
 from bw2data.tests import bw2test
 
-from bw_graph_tools import BreadthFirstGraphTraversal, BreadthFirstSettings
+from bw_graph_tools import BreadthFirstGraphTraversal, GraphTraversalSettings
 
 
 @bw2test
@@ -57,7 +57,7 @@ def test_breadth_first_basic_traversal():
     lca = LCA({("t", "1"): 1})
     lca.lci()
 
-    settings = BreadthFirstSettings(max_calc=100, max_depth=None)
+    settings = GraphTraversalSettings(max_calc=100, max_depth=None)
     bfgt = BreadthFirstGraphTraversal(lca, settings)
     bfgt.traverse()
 
@@ -131,7 +131,7 @@ def test_breadth_first_with_max_depth():
     lca.lci()
 
     # Limit to depth 2
-    settings = BreadthFirstSettings(max_calc=100, max_depth=2)
+    settings = GraphTraversalSettings(max_calc=100, max_depth=2)
     bfgt = BreadthFirstGraphTraversal(lca, settings)
     bfgt.traverse()
 
@@ -198,7 +198,7 @@ def test_breadth_first_with_static_activities():
     t2_index = lca.dicts.activity[get_node(code="2").id]
 
     # Mark activity 2 as static
-    settings = BreadthFirstSettings(max_calc=100)
+    settings = GraphTraversalSettings(max_calc=100)
     bfgt = BreadthFirstGraphTraversal(
         lca, settings, static_activity_indices={t2_index}
     )
@@ -264,7 +264,7 @@ def test_breadth_first_with_multiple_inputs():
     lca = LCA({("t", "1"): 1})
     lca.lci()
 
-    settings = BreadthFirstSettings(max_calc=100)
+    settings = GraphTraversalSettings(max_calc=100)
     bfgt = BreadthFirstGraphTraversal(lca, settings)
     bfgt.traverse()
 
@@ -338,7 +338,7 @@ def test_breadth_first_with_max_calc():
     lca.lci()
 
     # Limit to only 2 calculations (should stop before processing all nodes)
-    settings = BreadthFirstSettings(max_calc=2)
+    settings = GraphTraversalSettings(max_calc=2)
     bfgt = BreadthFirstGraphTraversal(lca, settings)
     bfgt.traverse()
 
@@ -383,7 +383,7 @@ def test_breadth_first_terminal_nodes():
     lca = LCA({("t", "1"): 1})
     lca.lci()
 
-    settings = BreadthFirstSettings(max_calc=100)
+    settings = GraphTraversalSettings(max_calc=100)
     bfgt = BreadthFirstGraphTraversal(lca, settings)
     bfgt.traverse()
 

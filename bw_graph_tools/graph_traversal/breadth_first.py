@@ -11,8 +11,8 @@ try:
 except ImportError:
     databases = {}
 
-from bw_graph_tools.graph_traversal.breadth_first_objects import SimplifiedEdge, SimplifiedNode
-from bw_graph_tools.graph_traversal.settings import BreadthFirstSettings
+from bw_graph_tools.graph_traversal.graph_objects import SimplifiedNode, Edge
+from bw_graph_tools.graph_traversal.settings import GraphTraversalSettings
 from bw_graph_tools.graph_traversal.utils import Counter, get_demand_vector_for_activity
 from bw_graph_tools.matrix_tools import guess_production_exchanges
 
@@ -42,7 +42,7 @@ class BreadthFirstGraphTraversal:
     ----------
     lca : bw2calc.LCA
         Already instantiated `LCA` object with inventory calculated.
-    settings : BreadthFirstSettings
+    settings : GraphTraversalSettings
         Settings for the breadth-first traversal
     functional_unit_unique_id : int
         An integer id we can use for the functional unit virtual activity.
@@ -58,12 +58,12 @@ class BreadthFirstGraphTraversal:
     Basic usage:
 
     >>> from bw2calc import LCA
-    >>> from bw_graph_tools import BreadthFirstGraphTraversal, BreadthFirstSettings
+    >>> from bw_graph_tools import BreadthFirstGraphTraversal, GraphTraversalSettings
     >>>
     >>> lca = LCA({("my_db", "my_activity"): 1})
     >>> lca.lci()
     >>>
-    >>> settings = BreadthFirstSettings(max_calc=1000, max_depth=5)
+    >>> settings = GraphTraversalSettings(max_calc=1000, max_depth=5)
     >>> bfgt = BreadthFirstGraphTraversal(lca, settings)
     >>> bfgt.traverse()
     >>>
@@ -80,7 +80,7 @@ class BreadthFirstGraphTraversal:
     def __init__(
         self,
         lca: LCA,
-        settings: BreadthFirstSettings,
+        settings: GraphTraversalSettings,
         functional_unit_unique_id: int = -1,
         static_activity_indices=None,
     ):
@@ -107,7 +107,7 @@ class BreadthFirstGraphTraversal:
         self._nodes: Dict[int, SimplifiedNode] = {
             self._functional_unit_unique_id: self._root_node
         }
-        self._edges: List[SimplifiedEdge] = []
+        self._edges: List[Edge] = []
         self.production_exchange_mapping = {
             x: y for x, y in zip(*self.get_production_exchanges(self.lca.technosphere_mm))
         }
@@ -123,7 +123,7 @@ class BreadthFirstGraphTraversal:
     @property
     def edges(self):
         """
-        List of `SimplifiedEdge` instances. Edges link two `SimplifiedNode` instances.
+        List of `Edge` instances. Edges link two `SimplifiedNode` instances.
         """
         return self._edges
 
@@ -188,7 +188,7 @@ class BreadthFirstGraphTraversal:
         """
         if reset_results:
             self._nodes: Dict[int, SimplifiedNode] = {}
-            self._edges: List[SimplifiedEdge] = []
+            self._edges: List[Edge] = []
 
         if nodes is None:
             self._nodes[self._functional_unit_unique_id] = self._root_node
@@ -287,7 +287,7 @@ class BreadthFirstGraphTraversal:
                 self._nodes[producing_node.unique_id] = producing_node
 
                 self._edges.append(
-                    SimplifiedEdge(
+                    Edge(
                         consumer_index=node.activity_index,
                         consumer_unique_id=node.unique_id,
                         producer_index=producer_index,
