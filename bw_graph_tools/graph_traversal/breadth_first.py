@@ -5,12 +5,14 @@ import matrix_utils as mu
 import numpy as np
 from bw2calc import LCA
 from scipy.sparse import spmatrix
+from typing_extensions import deprecated
 
 try:
     from bw2data import databases
 except ImportError:
     databases = {}
 
+from bw_graph_tools.graph_traversal.base import BaseGraphTraversal
 from bw_graph_tools.graph_traversal.graph_objects import SimplifiedNode, Edge
 from bw_graph_tools.graph_traversal.settings import GraphTraversalSettings
 from bw_graph_tools.graph_traversal.utils import Counter, get_demand_vector_for_activity
@@ -86,6 +88,95 @@ class BreadthFirstGraphTraversal:
         self._edges: List[Edge] = []
         self.production_exchange_mapping = {
             x: y for x, y in zip(*self.get_production_exchanges(self.lca.technosphere_mm))
+        }
+
+    @classmethod
+    @deprecated(
+        "Use `BreadthFirstGraphTraversal(lca, settings)` instead of `BFGT().calculate(stuff)`"
+    )
+    def calculate(
+        cls,
+        lca_object: LCA,
+        max_calc: Optional[int] = 10000,
+        max_depth: Optional[int] = None,
+        skip_coproducts: Optional[bool] = False,
+        static_activity_indices: Optional[set[int]] = None,
+        functional_unit_unique_id: Optional[int] = -1,
+    ) -> dict:
+        """
+        Breadth-first traversal of the supply chain graph, visiting all edges at each level.
+
+        This class unrolls the graph, i.e. every time it arrives at a given activity, it treats
+        it as a separate node in the graph.
+
+        You must provide an `lca_object` which is already instantiated, and for which you have
+        already done LCI calculations. The `lca_object` does not have to be an instance of
+        `bw2calc.LCA`, but it needs to support the following methods and attributes:
+
+        * `technosphere_matrix`
+        * `technosphere_mm`
+        * `demand`
+
+        The return object is a dictionary with three values.
+
+        * `nodes` is a dictionary of visited **activities**; the keys in this dictionary are
+            unique increasing integer ids (not related to any other ids or indices), and values are
+            instances of the `SimplifiedNode` dataclass. Each `SimplifiedNode` has a `unique_id`,
+            as every time we arrive at an activity (even if we have seen it before via another
+            branch of the supply chain), we create a new `SimplifiedNode` object with a unique id.
+            See the `SimplifiedNode` documentation for its other attributes.
+        * `edges` is a list of `Edge` instances. Edges link two `SimplifiedNode` instances.
+            The `Edge` amount is the amount demanded of the producer at that point in the supply
+            chain, scaled to the amount of the producer requested.
+
+        Finally, `calculation_count` gives the total number of nodes created during traversal.
+
+        Parameters
+        ----------
+        lca_object : bw2calc.LCA
+            Already instantiated `LCA` object with inventory calculated.
+        max_calc : int
+            Maximum number of nodes to create during traversal
+        max_depth : int
+            Maximum depth in the supply chain traversal. Default is no maximum.
+        skip_coproducts : bool
+            Don't traverse co-production edges, i.e. production edges other
+            than the reference product
+        static_activity_indices : set
+            A set of activity matrix indices which we don't want the graph to
+            traverse - i.e. we stop traversal when we hit these nodes, but
+            still add them to the returned `nodes` dictionary.
+        functional_unit_unique_id : int
+            An integer id we can use for the functional unit virtual activity.
+            Shouldn't overlap any other activity ids. Don't change unless you
+            really know what you are doing.
+
+        Returns
+        -------
+        dict
+            Dictionary with keys `nodes`, `edges`, `calculation_count`
+
+        """
+        if static_activity_indices is None:
+            static_activity_indices = set()
+            
+        instance = cls(
+            lca_object,
+            GraphTraversalSettings(
+                max_calc=max_calc,
+                max_depth=max_depth,
+                skip_coproducts=skip_coproducts,
+            ),
+            functional_unit_unique_id=functional_unit_unique_id,
+            static_activity_indices=static_activity_indices,
+        )
+
+        instance.traverse()
+
+        return {
+            "nodes": instance.nodes,
+            "edges": instance.edges,
+            "calculation_count": instance.calculation_count,
         }
 
     @property
