@@ -63,7 +63,46 @@ class Node:
         # Needed for sorting
         return self.cumulative_score < other.cumulative_score
 
+@dataclass
+class SimplifiedNode:
+    """
+    A simplified node for non-priority graph traversal without score/emissions requirements.
+    
+    Parameters
+    ----------
+    unique_id : int
+        A unique integer id for this visit to this activity node
+    activity_datapackage_id : int
+        The id that identifies this activity in the datapackage, and hence in the database
+    activity_index : int
+        The technosphere matrix column index of this activity
+    reference_product_datapackage_id : int
+        The id that identifies the reference product of this activity in the datapackage
+    reference_product_index : int
+        The technosphere matrix row index of this activity's reference product
+    reference_product_production_amount : float
+        The *net* production amount of this activity's reference product
+    depth : int
+        Depth in the supply chain graph, starting from 0 as the functional unit
+    supply_amount : float
+        The amount of the *activity* (not reference product!) needed to supply the demand from the
+        requesting supply chain edge.
+    terminal : bool
+        Boolean flag indicating whether graph traversal was cutoff at this node
+    """
 
+    unique_id: int
+    activity_datapackage_id: int
+    activity_index: int
+    reference_product_datapackage_id: int
+    reference_product_index: int
+    reference_product_production_amount: float
+    depth: int
+    supply_amount: float
+    max_depth: Optional[int] = None
+    terminal: bool = False
+    
+    
 @dataclass
 class GroupedNodes:
     """
